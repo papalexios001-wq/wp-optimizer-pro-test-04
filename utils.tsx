@@ -1941,6 +1941,7 @@ export default {
     DEFAULT_THRESHOLDS,
     UTILS_VERSION,
     SCORE_ALGORITHM_VERSION
+        };
 
     // ═══════════════════════════════════════════════════════════════════════════════
 // 🚀 SOTA BLOG QUALITY ENHANCEMENTS v30.0
@@ -2203,7 +2204,7 @@ export function applySOTAEnhancements(html: string, config?: {
   
   return { enhanced, changes, qualityScore };
 }
-}  // SOTA Blog Quality Enhancements v30.0
+export default {
   enhanceReadability,
   injectEEATSignals,
   generateArticleSchema,
@@ -2211,5 +2212,5 @@ export function applySOTAEnhancements(html: string, config?: {
   createQuickAnswerBox,
   createFAQAccordion,
   calculateContentQualityScore,
-  applySOTAEnhancements,
-;
+  applySOTAEnhancements
+      };
