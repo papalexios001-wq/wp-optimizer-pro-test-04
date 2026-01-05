@@ -217,3 +217,39 @@ export async function integrateYouTubeVideoIntoContent(
   }
 }
 
+// ==========================
+// REFERENCES SECTION
+// ==========================
+export interface ValidatedReference {
+  title: string;
+  url: string;
+  source?: string;
+  author?: string;
+}
+
+export function createReferencesSection(references: ValidatedReference[], title: string = 'References'): string {
+  if (!references || references.length === 0) return '';
+  
+  let html = `<section class="references-section" style="margin: 40px 0; background-color: #f9fafb; padding: 32px; border-radius: 12px; border-left: 4px solid #3b82f6;">`;
+  html += `<h2 style="color: #1f2937; font-size: 28px; font-weight: 700; margin-bottom: 24px;">📚 ${title}</h2>`;
+  html += `<div class="references-list">`;
+  
+  references.forEach((ref, index) => {
+    html += `<div class="reference-item" style="margin-bottom: 20px; padding: 16px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb;">`;
+    html += `<div style="display: flex; align-items: flex-start; gap: 12px;">`;
+    html += `<span style="color: #3b82f6; font-weight: 700; min-width: 24px;">${index + 1}.</span>`;
+    html += `<div style="flex: 1;">`;
+    html += `<a href="${ref.url}" target="_blank" rel="noopener noreferrer" style="color: #0ea5e9; text-decoration: none; font-weight: 600; font-size: 14px;">${ref.title}</a>`;
+    if (ref.source) {
+      html += `<div style="color: #6b7280; font-size: 12px; margin-top: 4px;">Source: ${ref.source}</div>`;
+    }
+    if (ref.author) {
+      html += `<div style="color: #9ca3af; font-size: 12px; margin-top: 2px;">Author: ${ref.author}</div>`;
+    }
+    html += `</div></div></div>`;
+  });
+  
+  html += `</div></section>`;
+  return html;
+}
+
