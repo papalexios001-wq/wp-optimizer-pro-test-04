@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// WP OPTIMIZER PRO — COMPLETE TYPE DEFINITIONS
+// WP OPTIMIZER PRO — COMPLETE TYPE DEFINITIONS (ALL PROPERTIES)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const APP_VERSION = "22.15.0";
@@ -37,7 +37,7 @@ export interface Toast {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WORDPRESS CONFIG — ALL PROPERTIES USED IN APP.TSX
+// WORDPRESS CONFIG — ALL PROPERTIES YOUR CODE USES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface WpConfig {
@@ -53,6 +53,7 @@ export interface WpConfig {
     authorPageUrl?: string;
     industry?: string;
     targetAudience?: string;
+    defaultCategory?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -91,53 +92,36 @@ export interface GeoTargetConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OPPORTUNITY SCORE
+// OPPORTUNITY SCORE — ALL OPTIONAL EXCEPT total AND factors
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface OpportunityScore {
     total: number;
     factors: Record<string, number>;
-    commercialIntent: number;
-    temporalDecay: number;
-    strikingDistance: number;
-    competitionLevel: number;
-    contentGap: number;
-    trafficPotential: number;
-    conversionPotential: number;
-}
-
-export function createDefaultOpportunityScore(
-    total: number = 0, 
-    factors: Record<string, number> = {}
-): OpportunityScore {
-    return {
-        total,
-        factors,
-        commercialIntent: factors.commercialIntent || 0,
-        temporalDecay: factors.temporalDecay || 0,
-        strikingDistance: factors.strikingDistance || 0,
-        competitionLevel: factors.competitionLevel || 0,
-        contentGap: factors.contentGap || 0,
-        trafficPotential: factors.trafficPotential || 0,
-        conversionPotential: factors.conversionPotential || 0,
-    };
+    commercialIntent?: number;
+    temporalDecay?: number;
+    strikingDistance?: number;
+    competitionLevel?: number;
+    contentGap?: number;
+    trafficPotential?: number;
+    conversionPotential?: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMPROVEMENT HISTORY
+// IMPROVEMENT HISTORY — ALL PROPERTIES OPTIONAL EXCEPT CORE ONES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface ImprovementHistoryEntry {
-    date: string;
+    date?: string;
     timestamp: number;
-    wordsBefore: number;
-    wordsAfter: number;
+    wordsBefore?: number;
+    wordsAfter?: number;
     wordCount: number;
-    scoreBefore: number;
-    scoreAfter: number;
+    scoreBefore?: number;
+    scoreAfter?: number;
     score: number;
     qaScore: number;
-    changes: string[];
+    changes?: string[];
     action: string;
     version: string;
 }
@@ -173,13 +157,14 @@ export type GodModePhase =
     | 'failed'
     | 'error'
     | 'collect_intel'
+    | 'strategic_intel'
     | 'running';
 
 export interface GodModeJobState {
     id: string;
     targetId: string;
     phase: GodModePhase;
-    status: 'idle' | 'processing' | 'completed' | 'failed' | 'queued' | 'analyzing' | 'analyzed' | 'error' | 'running';
+    status?: 'idle' | 'processing' | 'completed' | 'failed' | 'queued' | 'analyzing' | 'analyzed' | 'error' | 'running';
     progress: number;
     logs: string[];
     log: string[];
@@ -198,6 +183,7 @@ export interface GodModeJobState {
     attempts?: number;
     processingTime?: number;
     lastUpdated?: number;
+    previousScores?: number[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -221,47 +207,19 @@ export interface SeoMetrics {
     internalLinkScore: number;
     schemaDetected: boolean;
     schemaTypes: string[];
-    titleOptimization: number;
-    metaOptimization: number;
-    readabilityGrade: string;
-    linkDensity: number;
-    keywordDensity: number;
-    imageOptimization: number;
-    mobileScore: number;
-    pageSpeed: number;
-    coreWebVitals: CoreWebVitals;
-    structuredDataScore: number;
-    socialSignals: number;
-    freshness: number;
-    authorityScore: number;
-}
-
-export function createDefaultSeoMetrics(): SeoMetrics {
-    return {
-        wordCount: 0,
-        readability: 0,
-        contentDepth: 0,
-        headingStructure: 0,
-        aeoScore: 0,
-        geoScore: 0,
-        eeatSignals: 0,
-        internalLinkScore: 0,
-        schemaDetected: false,
-        schemaTypes: [],
-        titleOptimization: 0,
-        metaOptimization: 0,
-        readabilityGrade: 'N/A',
-        linkDensity: 0,
-        keywordDensity: 0,
-        imageOptimization: 0,
-        mobileScore: 0,
-        pageSpeed: 0,
-        coreWebVitals: { lcp: 0, fid: 0, cls: 0 },
-        structuredDataScore: 0,
-        socialSignals: 0,
-        freshness: 0,
-        authorityScore: 0,
-    };
+    titleOptimization?: number;
+    metaOptimization?: number;
+    readabilityGrade?: string;
+    linkDensity?: number;
+    keywordDensity?: number;
+    imageOptimization?: number;
+    mobileScore?: number;
+    pageSpeed?: number;
+    coreWebVitals?: CoreWebVitals;
+    structuredDataScore?: number;
+    socialSignals?: number;
+    freshness?: number;
+    authorityScore?: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -406,6 +364,7 @@ export interface CompetitorAnalysis {
     score?: number;
     snippet?: string;
     domain?: string;
+    position?: number;
 }
 
 export interface EntityGapAnalysis {
@@ -422,6 +381,7 @@ export interface EntityGapAnalysis {
     recommendedWordCount?: number;
     avgWordCount?: number;
     featuredSnippetOpportunity?: boolean;
+    topicClusters?: string[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -454,6 +414,7 @@ export interface NeuronAnalysisResult {
     targetWordCount: number;
     recommendations?: string[];
     competitorAnalysis?: any;
+    competitors?: any[];
     contentScore?: number;
     status?: 'success' | 'error' | 'pending' | 'ready';
 }
@@ -551,41 +512,42 @@ export interface GeneratedSection {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// AUTONOMOUS CONFIG — ALL PROPERTIES USED IN STORE.TS
+// AUTONOMOUS CONFIG — ALL PROPERTIES YOUR CODE USES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface AutonomousConfig {
     enabled: boolean;
     maxConcurrent: number;
     delayBetweenJobs: number;
+    delayBetweenPages?: number;
     autoPublish: boolean;
     minQualityScore: number;
     maxRetries: number;
     skipOnError: boolean;
-    targetScore: number;
-    maxRetriesPerPage: number;
-    processNewPagesOnly: boolean;
-    prioritizeByOpportunity: boolean;
+    targetScore?: number;
+    maxRetriesPerPage?: number;
+    processNewPagesOnly?: boolean;
+    prioritizeByOpportunity?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CACHE & LOCKS — ALL PROPERTIES USED IN STORE.TS
+// CACHE & LOCKS — ALL PROPERTIES YOUR CODE USES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface CacheEntry<T = any> {
     data: T;
     timestamp: number;
-    expiresAt: number;
-    key: string;
-    ttl: number;
+    expiresAt?: number;
+    key?: string;
+    ttl?: number;
 }
 
 export interface ProcessingLock {
-    id: string;
+    id?: string;
     lockedAt: number;
     lockedBy: string;
-    expiresAt: number;
-    isLocked: boolean;
+    expiresAt?: number;
+    isLocked?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -745,7 +707,5 @@ export interface AppState {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default {
-    APP_VERSION,
-    createDefaultOpportunityScore,
-    createDefaultSeoMetrics,
+    APP_VERSION
 };
