@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// WP OPTIMIZER PRO — COMPLETE TYPE DEFINITIONS
+// WP OPTIMIZER PRO — COMPLETE TYPE DEFINITIONS (FINAL)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const APP_VERSION = "22.15.0";
@@ -27,6 +27,7 @@ export interface HeadingInfo {
     level: number;
     text: string;
     id?: string;
+    hasKeyword?: boolean;
 }
 
 export interface Toast {
@@ -37,7 +38,7 @@ export interface Toast {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// WORDPRESS CONFIG
+// WORDPRESS CONFIG — ALL OPTIONAL EXCEPT CORE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface WpConfig {
@@ -53,7 +54,7 @@ export interface WpConfig {
     authorPageUrl?: string;
     industry?: string;
     targetAudience?: string;
-    defaultCategory?: string | undefined;
+    defaultCategory?: string | null | undefined;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,9 +81,9 @@ export interface ApiKeys {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface GeoTargetConfig {
-    enabled: boolean;
-    country: string;
-    language: string;
+    enabled?: boolean;
+    country?: string;
+    language?: string;
     region?: string;
     city?: string;
     localKeywords?: string[];
@@ -92,7 +93,7 @@ export interface GeoTargetConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OPPORTUNITY SCORE
+// OPPORTUNITY SCORE — ALL OPTIONAL EXCEPT total AND factors
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface OpportunityScore {
@@ -110,7 +111,7 @@ export interface OpportunityScore {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IMPROVEMENT HISTORY
+// IMPROVEMENT HISTORY — MOST OPTIONAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface ImprovementHistoryEntry {
@@ -129,7 +130,7 @@ export interface ImprovementHistoryEntry {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GOD MODE PHASES & JOB STATE
+// GOD MODE PHASES — ALL PHASES YOUR CODE USES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export type GodModePhase = 
@@ -161,17 +162,22 @@ export type GodModePhase =
     | 'error'
     | 'collect_intel'
     | 'strategic_intel'
+    | 'competitor_deep_dive'
     | 'running';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD MODE JOB STATE — ALL OPTIONAL EXCEPT id, targetId, phase
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface GodModeJobState {
     id: string;
     targetId: string;
     phase: GodModePhase;
     status?: 'idle' | 'processing' | 'completed' | 'failed' | 'queued' | 'analyzing' | 'analyzed' | 'error' | 'running';
-    progress: number;
-    logs: string[];
-    log: string[];
-    startTime: number;
+    progress?: number;
+    logs?: string[];
+    log?: string[];
+    startTime?: number;
     endTime?: number;
     error?: string;
     result?: ContentContract;
@@ -191,13 +197,13 @@ export interface GodModeJobState {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SEO METRICS
+// SEO METRICS — ALL OPTIONAL EXCEPT CORE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface CoreWebVitals {
-    lcp: number;
-    fid: number;
-    cls: number;
+    lcp?: number;
+    fid?: number;
+    cls?: number;
 }
 
 export interface SeoMetrics {
@@ -247,24 +253,11 @@ export function createDefaultSeoMetrics(): SeoMetrics {
         internalLinkScore: 0,
         schemaDetected: false,
         schemaTypes: [],
-        titleOptimization: 0,
-        metaOptimization: 0,
-        readabilityGrade: 'N/A',
-        linkDensity: 0,
-        keywordDensity: 0,
-        imageOptimization: 0,
-        mobileScore: 0,
-        pageSpeed: 0,
-        coreWebVitals: { lcp: 0, fid: 0, cls: 0 },
-        structuredDataScore: 0,
-        socialSignals: 0,
-        freshness: 0,
-        authorityScore: 0,
     };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SITEMAP PAGE
+// SITEMAP PAGE — lastPublishedAt ADDED
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface SitemapPage {
@@ -289,6 +282,7 @@ export interface SitemapPage {
     tags?: string[];
     postId?: number;
     wpPostId?: number;
+    lastPublishedAt?: string | number | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -307,7 +301,17 @@ export interface InternalLinkTarget {
 export interface InternalLinkResult {
     url: string;
     anchorText: string;
-    relevanceScore: number;
+    relevanceScore?: number;
+    position?: number;
+    context?: string;
+    matchType?: string;
+    insertedAt?: number;
+}
+
+export interface InternalLinkAddedItem {
+    url: string;
+    anchorText: string;
+    relevanceScore?: number;
     position?: number;
     context?: string;
     matchType?: string;
@@ -471,7 +475,7 @@ export interface ContentContract {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPETITOR & ENTITY GAP ANALYSIS
+// COMPETITOR ANALYSIS — hasFAQ, hasSchema ADDED
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface CompetitorAnalysis {
@@ -485,7 +489,12 @@ export interface CompetitorAnalysis {
     domain?: string;
     position?: number;
     hasSchema?: boolean;
+    hasFAQ?: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENTITY GAP ANALYSIS — knowledgeGraphData, localPackPresent ADDED
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface EntityGapAnalysis {
     missingEntities: string[];
@@ -503,6 +512,8 @@ export interface EntityGapAnalysis {
     featuredSnippetOpportunity?: boolean;
     topicClusters?: string[];
     semanticTerms?: string[];
+    knowledgeGraphData?: any;
+    localPackPresent?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -559,7 +570,7 @@ export interface ValidatedReference {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SITE CONTEXT & GENERATE CONFIG
+// SITE CONTEXT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface SiteContext {
@@ -572,6 +583,10 @@ export interface SiteContext {
     targetAudience?: string;
     brandVoice?: string;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GENERATE CONFIG
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface GenerateConfig {
     topic: string;
@@ -597,7 +612,7 @@ export interface GenerateConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SERP LENGTH POLICY & CONTENT OUTLINE
+// SERP LENGTH POLICY
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface SerpLengthPolicy {
@@ -612,6 +627,10 @@ export interface SerpLengthPolicy {
     minH3Count: number;
     minFAQCount: number;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONTENT OUTLINE
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface ContentOutline {
     title: string;
@@ -638,7 +657,7 @@ export interface GeneratedSection {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// AUTONOMOUS CONFIG
+// AUTONOMOUS CONFIG — minWordCount ADDED
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface AutonomousConfig {
@@ -655,10 +674,11 @@ export interface AutonomousConfig {
     maxRetriesPerPage?: number;
     processNewPagesOnly?: boolean;
     prioritizeByOpportunity?: boolean;
+    minWordCount?: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CACHE & LOCKS
+// CACHE & LOCKS — ALL OPTIONAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface CacheEntry<T = any> {
@@ -678,7 +698,7 @@ export interface ProcessingLock {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STAGE PROGRESS & NLP TYPES
+// STAGE PROGRESS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface StageProgress {
@@ -688,6 +708,10 @@ export interface StageProgress {
     sectionsCompleted?: number;
     totalSections?: number;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NLP TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface NLPInjectionResult {
     html: string;
