@@ -14,6 +14,36 @@
 // ✅ CONTINUATION REQUESTS — Resumes truncated responses
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Add this import at the top of ai-orchestrator.ts
+import {
+    createQuickAnswerBox,
+    createProTipBox,
+    createWarningBox,
+    createStatsDashboard,
+    createExpertQuote,
+    createComparisonTable,
+    createChecklist,
+    createKeyTakeaways,
+    createFAQAccordion,
+    createCTABox,
+    createDefinitionBox,
+    createYouTubeEmbed,
+    createStepByStepGuide,
+    createProsConsTable,
+    THEME_CSS
+} from './visual-components';
+
+// In the content assembly section, wrap content with THEME_CSS:
+function assembleContent(sections: string[], faqs: FAQ[]): string {
+    return THEME_CSS + `
+<div class="wpo-content">
+    ${sections.join('\n\n')}
+    ${createKeyTakeaways(['Takeaway 1', 'Takeaway 2'])}
+    ${createFAQAccordion(faqs)}
+</div>`;
+}
+
+
 import { GoogleGenAI } from '@google/genai';
 import { 
     ContentContract, 
@@ -33,6 +63,8 @@ import {
 } from '../types';
 
 import { injectInternalLinks } from '../utils';
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 📌 VERSION & CONFIGURATION CONSTANTS
