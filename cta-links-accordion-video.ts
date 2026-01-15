@@ -1,6 +1,12 @@
 // CTA LINKS, FAQ ACCORDION, SCHEMA MARKUP & YOUTUBE VIDEO INTEGRATION
 // WP Optimizer Pro v30.0 - Enterprise SOTA Implementation
 // SOTA UI/UX Components with Modern Design System
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🎬 IMPORTS - YouTube Video Service Integration
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { YouTubeVideoService, generateVideoEmbedHTML, injectVideoIntoContent } from './youtube-video-service';
+import type { YouTubeVideoData, YouTubeSearchResult } from './types';
 
 // ========================
 // CTA BOX WITH LINKED TEXT
@@ -184,11 +190,103 @@ export function createReferencesSection(references: Reference[]): string {
   return html;
 }
 
-// ========================
-// YOUTUBE VIDEO INTEGRATION - SOTA
-// ========================
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🎬 YOUTUBE VIDEO INTEGRATION - SERPER.DEV API POWERED
+// ═══════════════════════════════════════════════════════════════════════════════
 
-export function integrateYouTubeVideoIntoContent(
+/**
+ * ENTERPRISE-GRADE YouTube Video Integration with Serper.dev API
+ * 
+ * This function uses the YouTubeVideoService to:
+ * 1. Search for relevant videos using Serper.dev API
+ * 2. Score and validate video quality
+ * 3. Select the best matching video
+ * 4. Generate SEO-optimized embed HTML
+ * 5. Inject the video into the content at the optimal position
+ * 
+ * @param htmlContent - The HTML content to inject the video into
+ * @param articleTitle - The article title for video search
+ * @param serperApiKey - Serper.dev API key for video discovery
+ * @param log - Optional logging callback
+ * @returns Promise<string> - HTML content with embedded YouTube video
+ */
+export async function integrateYouTubeVideoIntoContent(
+  htmlContent: string,
+  articleTitle: string,
+  serperApiKey?: string,
+  log?: (msg: string) => void
+): Promise<string> {
+  // If no Serper API key provided, return content unchanged
+  if (!serperApiKey || serperApiKey.trim() === '') {
+    log?.('⚠️ YouTube integration skipped: No Serper API key provided');
+    return htmlContent;
+  }
+
+  try {
+    log?.('🎬 Starting YouTube video discovery via Serper.dev API...');
+    
+    // Initialize the YouTube Video Service with Serper API
+    const youtubeService = new YouTubeVideoService({
+      serperApiKey: serperApiKey,
+      minViews: 1000,
+      minDuration: 60,    // Minimum 1 minute
+      maxDuration: 3600,  // Maximum 1 hour
+      enableCaching: true
+    });
+
+    // Search for the best video using multiple strategies
+    log?.(`🔍 Searching for videos related to: "${articleTitle}"`);
+    const searchResult = await youtubeService.findBestVideo(
+      articleTitle,
+      articleTitle // Use article title as target keyword
+    );
+
+    // Check if a video was found
+    if (!searchResult.video) {
+      log?.('⚠️ No suitable YouTube video found for this topic');
+      return htmlContent;
+    }
+
+    const video = searchResult.video;
+    log?.(`✅ Found video: "${video.title}" by ${video.channel}`);
+    log?.(`   Video ID: ${video.videoId}`);
+    log?.(`   Source: ${searchResult.source}`);
+
+    // Validate the video is still accessible
+    const isValid = await youtubeService.validateVideo(video.videoId);
+    if (!isValid) {
+      log?.('⚠️ Video validation failed - video may be unavailable');
+      return htmlContent;
+    }
+    log?.('✅ Video validation passed');
+
+    // Generate the embed HTML with SEO schema markup
+    const embedHtml = youtubeService.generateEmbed(video, articleTitle, 'full');
+    log?.('🎬 Generated responsive video embed with VideoObject schema');
+
+    // Inject the video into the content at the optimal position
+    const enrichedContent = injectVideoIntoContent(
+      htmlContent,
+      video,
+      articleTitle,
+      'after-intro' // Position after the introduction
+    );
+
+    log?.('✅ YouTube video successfully integrated into content');
+    return enrichedContent;
+
+  } catch (error: any) {
+    log?.(`❌ YouTube integration error: ${error.message}`);
+    // Return original content on error - graceful degradation
+    return htmlContent;
+  }
+}
+
+/**
+ * Legacy function for backward compatibility
+ * Embeds a specific video by ID (without Serper search)
+ */
+export function embedYouTubeVideoById(
   htmlContent: string,
   videoId: string,
   timestamp?: string,
@@ -198,36 +296,47 @@ export function integrateYouTubeVideoIntoContent(
   
   const embedUrl = `https://www.youtube.com/embed/${videoId}${timestamp ? `?start=${timestamp}` : ''}`;
   
-  const videoEmbed = `<div class="sota-video-embed" style="
-    margin: 48px 0;
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
-  ">
-    <iframe
-      style="
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 16px;
-      "
-      src="${embedUrl}"
-      title="${title || 'YouTube video'}"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen>
-    </iframe>
-  </div>`;
+  const videoEmbed = `<!-- YouTube Video Section -->
+<div class="sota-video-embed" style="
+  margin: 48px 0;
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
+">
+  <iframe
+    style="
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 16px;
+    "
+    src="${embedUrl}"
+    title="${title || 'YouTube video'}"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+    loading="lazy">
+  </iframe>
+</div>
+<!-- End YouTube Video Section -->`;
   
   return htmlContent + videoEmbed;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📤 DEFAULT EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════════
 
-
-export default { createCTABox, createEnterpriseAccordion , createReferencesSection, integrateYouTubeVideoIntoContent };
+export default { 
+  createCTABox, 
+  createEnterpriseAccordion, 
+  createReferencesSection, 
+  integrateYouTubeVideoIntoContent,
+  embedYouTubeVideoById
+};
