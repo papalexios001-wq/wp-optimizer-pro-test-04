@@ -1214,7 +1214,7 @@ Return ONLY the JSON array.`;
             
 
             // ═══════════════════════════════════════════════════════════════
-            // STAGE 5: DISCOVER REFERENCES
+// STAGE 5: DISCOVER REFERENCES
 if (config.apiKeys?.serper) {
     // Use passed references OR discover new ones
     if (config.validatedReferences && config.validatedReferences.length >= 5) {
@@ -1229,9 +1229,10 @@ if (config.apiKeys?.serper) {
         }));
         log(`   ✅ Using ${references.length} pre-validated references`);
     } else {
-        references = await discoverReferences(config.topic, config.apiKeys.serper, {...}, log);
+        references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 }, log);
     }
 }
+
 
             
             // ═══════════════════════════════════════════════════════════════
