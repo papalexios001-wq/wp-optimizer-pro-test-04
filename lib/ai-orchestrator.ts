@@ -15,7 +15,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 import { 
-    ContentContract, 
+    ContentContract,     
     GenerateConfig, 
     SiteContext, 
     EntityGapAnalysis,
@@ -1561,7 +1561,7 @@ Output ONLY valid JSON with: title, metaDescription, slug, htmlContent, excerpt,
     
     throw new Error('Content generation failed after 3 attempts');
 }
-
+}  // ← 🔥🔥🔥 ADD THIS LINE — IT CLOSES THE CLASS!
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 📤 EXPORTS
