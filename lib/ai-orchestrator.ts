@@ -1881,44 +1881,32 @@ OUTPUT: HTML only, starting with <h2>Conclusion</h2>.`;
         let youtubeVideo: YouTubeVideoData | null = null;
         let references: DiscoveredReference[] = [];
         
-        // ═══════════════════════════════════════════════════════════════
-        // STEP 1: PARALLEL — YouTube + References
-        // ═══════════════════════════════════════════════════════════════
-        
-        log(`   🔍 Starting parallel discovery...`);
-        
+      
+// ═══════════════════════════════════════════════════════════════
+// STEP 1: PARALLEL — YouTube + References (FIXED - NO TDZ)
+// ═══════════════════════════════════════════════════════════════
 
-// ✅ NEW PATTERN (explicit return):
-const youtubePromise = config.apiKeys?.serper 
-    ? searchYouTubeVideo(config.topic, config.apiKeys.serper, log)
-        .then(video => { youtubeVideo = video; return video; })
-        .catch(e => { log(`   ❌ YouTube error: ${e.message}`); return null; })
-    : Promise.resolve(null);
+log(`   🔍 Starting parallel discovery...`);
 
+// ✅ FIXED: IIFE pattern avoids TDZ issues with minification
+const youtubePromise = config.apiKeys?.serper ? (async () => {
+    try {
+        const video = await searchYouTubeVideo(config.topic, config.apiKeys.serper, log);
+        if (video && video.videoId) {
+            youtubeVideo = video;
+            log(`   ✅ YouTube FOUND: "${video.title?.substring(0, 40)}..." (${video.views?.toLocaleString() || 0} views)`);
+        } else {
+            log(`   ⚠️ YouTube search returned no valid video`);
+            youtubeVideo = null;
+        }
+        return video;
+    } catch (e: any) {
+        log(`   ❌ YouTube search ERROR: ${e.message}`);
+        youtubeVideo = null;
+        return null;
+    }
+})() : Promise.resolve(null);
 
-        
-        const referencesPromise = config.apiKeys?.serper ? (async () => {
-            try {
-                log(`   📚 Discovering references...`);
-                if (config.validatedReferences && config.validatedReferences.length >= 5) {
-                    references = config.validatedReferences.map(ref => ({
-                        url: ref.url,
-                        title: ref.title,
-                        source: ref.source || extractSourceName(ref.url),
-                        snippet: ref.snippet,
-                        year: ref.year,
-                        authorityScore: ref.isAuthority ? 90 : 70,
-                        favicon: `https://www.google.com/s2/favicons?domain=${extractDomain(ref.url)}&sz=32`
-                    }));
-                    log(`   ✅ Using ${references.length} pre-validated references`);
-                } else {
-                    references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 }, log);
-                    log(`   ✅ Discovered ${references.length} references`);
-                }
-            } catch (e: any) {
-                log(`   ⚠️ Reference error: ${e.message}`);
-            }
-        })() : Promise.resolve();
         
         // ═══════════════════════════════════════════════════════════════
         // STEP 2: HUMAN-STYLE CONTENT GENERATION
