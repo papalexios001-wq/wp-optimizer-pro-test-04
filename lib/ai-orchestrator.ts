@@ -911,18 +911,16 @@ export function injectInternalLinksDistributed(
         let sectionLinksAdded = 0;
         let processedPart = part;
         
-        // ✅ FIXED REGEX — Now matches paragraphs with HTML inside
         const paraRegex = /<p[^>]*>([\s\S]{80,}?)<\/p>/gi;
         let match;
         const paragraphs: Array<{ full: string; text: string; plainText: string; pos: number }> = [];
         
         while ((match = paraRegex.exec(part)) !== null) {
-            // ✅ Extract plain text for anchor matching
             const plainText = match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
             paragraphs.push({ 
                 full: match[0], 
                 text: match[1], 
-                plainText,  // ✅ Added plain text version
+                plainText,
                 pos: match.index 
             });
         }
@@ -941,32 +939,49 @@ export function injectInternalLinksDistributed(
             }
             
             const target = availableTargets[targetIndex];
-            
-            // ✅ Use plainText for anchor matching
             const anchorText = findAnchorTextWithDebug(para.plainText, target, log, totalLinksAdded < 3);
             
             if (anchorText && anchorText.length >= 4) {
-                // ✅ Check in plainText, but replace in original text
                 if (para.plainText.toLowerCase().includes(anchorText.toLowerCase())) {
                     const link = `<a href="${escapeHtml(target.url)}" title="${escapeHtml(target.title)}">${anchorText}</a>`;
+                    
+                    // ✅ SAFE REPLACEMENT METHOD
                     const escapedAnchor = anchorText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const anchorRegex = new RegExp(`(?<!<[^>]*)\\b${escapedAnchor}\\b(?![^<]*>)`, 'i');
+                    const simpleRegex = new RegExp(`\\b${escapedAnchor}\\b`, 'i');
                     
-                    const newPara = para.full.replace(anchorRegex, link);
-                    
-                    if (newPara !== para.full) {
-                        processedPart = processedPart.replace(para.full, newPara);
-                        linksAdded.push({ 
-                            url: target.url, 
-                            anchorText, 
-                            relevanceScore: 0.8, 
-                            position: paraWordPos 
-                        });
-                        sectionLinksAdded++;
-                        totalLinksAdded++;
-                        lastLinkWordPos = paraWordPos;
+                    // Check if match exists and is not inside HTML tag
+                    const matchResult = para.full.match(simpleRegex);
+                    if (matchResult) {
+                        const matchIndex = para.full.search(simpleRegex);
+                        const beforeMatch = para.full.substring(0, matchIndex);
                         
-                        log(`      ✅ Link ${totalLinksAdded}: "${anchorText}" → ${target.url.substring(0, 40)}...`);
+                        // Count unclosed < before match position
+                        const openBrackets = (beforeMatch.match(/<(?![^>]*>)/g) || []).length;
+                        const closeBrackets = (beforeMatch.match(/>/g) || []).length;
+                        const insideTag = openBrackets > closeBrackets;
+                        
+                        if (!insideTag) {
+                            const newPara = para.full.replace(simpleRegex, link);
+                            
+                            if (newPara !== para.full) {
+                                processedPart = processedPart.replace(para.full, newPara);
+                                linksAdded.push({ 
+                                    url: target.url, 
+                                    anchorText, 
+                                    relevanceScore: 0.8, 
+                                    position: paraWordPos 
+                                });
+                                sectionLinksAdded++;
+                                totalLinksAdded++;
+                                lastLinkWordPos = paraWordPos;
+                                
+                                log(`      ✅ Link ${totalLinksAdded}: "${anchorText}" → ${target.url.substring(0, 40)}...`);
+                            } else {
+                                log(`      ⚠️ Replacement failed for: "${anchorText}"`);
+                            }
+                        } else {
+                            log(`      ⚠️ Anchor "${anchorText}" is inside HTML tag — skipped`);
+                        }
                     }
                 }
             }
@@ -987,7 +1002,6 @@ export function injectInternalLinksDistributed(
     };
 }
 
-    
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔍 ANCHOR TEXT FINDER — WITH DEBUG
@@ -1163,36 +1177,45 @@ function findAnchorTextWithDebug(
         }
     }
     
-      // ═══════════════════════════════════════════════════════════════
-    // STRATEGY 5 (NEW): Generic contextual anchor from paragraph
-    // Find any 2-3 word phrase that's semantically relevant
-    // ═══════════════════════════════════════════════════════════════
-    
-    // Find common topic-related phrases in paragraph
-    const genericPhrases = text.match(/\b([a-zA-Z]{4,}(?:\s+[a-zA-Z]{4,}){1,2})\b/g);
-    if (genericPhrases && genericPhrases.length > 0) {
-        // Filter to reasonable anchor lengths
-        const validPhrases = genericPhrases.filter(p => 
-            p.length >= 8 && 
-            p.length <= 35 && 
-            !stopWords.has(p.split(' ')[0].toLowerCase())
-        );
-        
-        if (validPhrases.length > 0) {
-            // Pick a phrase from the middle of the paragraph (better UX)
-            const midIndex = Math.floor(validPhrases.length / 2);
-            const anchor = validPhrases[midIndex];
-            if (verbose) log(`         → Strategy 5 MATCH (generic): "${anchor}"`);
-            return anchor;
-        }
-    }
-    
-    if (verbose) log(`         → No anchor match found`);
-    
-    // NO FALLBACK — Return empty to prevent bad anchors
-    return '';
-}
+// ═══════════════════════════════════════════════════════════════
+// STRATEGY 5 (IMPROVED): Generic contextual anchor from paragraph
+// ═══════════════════════════════════════════════════════════════
 
+const genericPhrases = text.match(/\b([a-zA-Z]{4,}(?:\s+[a-zA-Z]{4,}){1,2})\b/g);
+if (genericPhrases && genericPhrases.length > 0) {
+    // Enhanced filtering for quality anchors
+    const badStartWords = new Set(['have', 'been', 'this', 'that', 'will', 'would', 'could', 'should', 'there', 'these', 'those', 'when', 'what', 'where', 'which', 'while', 'your', 'their', 'about', 'after', 'before', 'being', 'here', 'very', 'really', 'actually', 'basically', 'simply', 'just', 'even', 'also', 'only']);
+    const badEndWords = new Set(['here', 'there', 'been', 'being', 'have', 'this', 'that', 'very', 'really', 'much', 'well', 'just', 'also', 'only', 'even']);
+    
+    const validPhrases = genericPhrases.filter(p => {
+        const words = p.toLowerCase().split(' ');
+        const firstWord = words[0];
+        const lastWord = words[words.length - 1];
+        
+        return (
+            p.length >= 10 &&                           // Minimum 10 chars (was 8)
+            p.length <= 35 &&                           // Maximum 35 chars
+            !stopWords.has(firstWord) &&                // First word not stop word
+            !badStartWords.has(firstWord) &&            // First word not bad start
+            !badEndWords.has(lastWord) &&               // Last word not bad end
+            words.every(w => w.length >= 3) &&          // All words 3+ chars
+            !words.every(w => stopWords.has(w))         // Not ALL words are stop words
+        );
+    });
+    
+    if (validPhrases.length > 0) {
+        // Prefer phrases with longer words (more meaningful)
+        validPhrases.sort((a, b) => {
+            const aAvgLen = a.split(' ').reduce((sum, w) => sum + w.length, 0) / a.split(' ').length;
+            const bAvgLen = b.split(' ').reduce((sum, w) => sum + w.length, 0) / b.split(' ').length;
+            return bAvgLen - aAvgLen;
+        });
+        
+        const anchor = validPhrases[0];  // Take best quality phrase
+        if (verbose) log(`         → Strategy 5 MATCH (generic): "${anchor}"`);
+        return anchor;
+    }
+}
 
 
 
@@ -2536,5 +2559,6 @@ export const OPENROUTER_MODELS = [
     'deepseek/deepseek-chat',
     'meta-llama/llama-3.3-70b-instruct',
 ];
+
 
 export default orchestrator;
