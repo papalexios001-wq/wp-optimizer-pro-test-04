@@ -1158,7 +1158,7 @@ function extractTargetKeywords(title: string, url: string): string[] {
             // Try to find anchor text
                     // 🎯 SOTA: Use enterprise-grade contextual anchor text engine
         const targetKeywords = extractTargetKeywords(target.title || '', target.url);
-        const anchorCandidate = findContextualAnchorText(para.text, targetKeywords, target.title || '', log);        const anchorText = anchorCandidate ? anchorCandidate.phrase : null;
+        const anchorCandidate = findContextualAnchorText(para.text, targetKeywords, target.title || '');        const anchorText = anchorCandidate ? anchorCandidate.phrase : null;
             if (anchorText && anchorText.length >= 4) {
                     anchorsMatched++;
                     const link = `<a href="${escapeHtml(target.url)}" title="${escapeHtml(target.title)}">${anchorText}</a>`;
@@ -1573,7 +1573,7 @@ async function callLLM(
     } catch (error: any) {
         clearTimeout(timeoutId);
         if (error.message?.includes('401') || error.message?.includes('429') || error.message?.includes('500')) {
-            recordFailure(provider, log);
+            recordFailure(provider);
         }
         throw error;
     }
@@ -1714,10 +1714,10 @@ Return ONLY valid JSON.`;
                 { temperature: 0.7, maxTokens: 4000 }, TIMEOUTS.OUTLINE_GENERATION, log
             );
             
-            const outlineParsed = healJSON(outlineResponse, log);
+            const outlineParsed = healJSON(outlineResponse);
             if (!outlineParsed.success || !outlineParsed.data?.sections?.length) {
                 log(`   ❌ Outline generation failed, falling back to single-shot`);
-                return this.generateSingleShot(config, log);
+                return this.generateSingleShot(config);
             }
             
             const outline: ContentOutline = outlineParsed.data;
@@ -1730,7 +1730,7 @@ Return ONLY valid JSON.`;
 const youtubePromise = config.apiKeys?.serper ? (async () => {
     try {
         log(`   🎬 Searching YouTube for: "${config.topic.substring(0, 50)}..."`);
-        const foundVideo = await searchYouTubeVideo(config.topic, config.apiKeys.serper, log);
+        const foundVideo = await searchYouTubeVideo(config.topic, config.apiKeys.serper);
         if (foundVideo && foundVideo.videoId) {
             youtubeVideo = foundVideo;
             log(`   ✅ YouTube FOUND: "${foundVideo.title.substring(0, 40)}..." (${foundVideo.views?.toLocaleString() || 0} views)`);
@@ -1830,7 +1830,7 @@ Return ONLY the JSON array.`;
                         { temperature: 0.7, maxTokens: 4000 }, TIMEOUTS.SECTION_GENERATION, log
                     );
                     
-                    const faqParsed = healJSON(`{"faqs":${faqResponse}}`, log);
+                    const faqParsed = healJSON(`{"faqs":${faqResponse}}`);
                     if (faqParsed.success && Array.isArray(faqParsed.data?.faqs)) {
                         faqs = faqParsed.data.faqs;
                     } else {
@@ -1864,7 +1864,7 @@ if (config.apiKeys?.serper) {
         }));
         log(`   ✅ Using ${references.length} pre-validated references`);
     } else {
-        references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 }, log);
+        references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 });
     }
 }
 
@@ -2010,7 +2010,7 @@ OUTPUT: HTML only, starting with <h2>Conclusion</h2>.`;
             let assembledContent = contentParts.filter(Boolean).join('\n\n');
             
             // Remove H1 tags
-            assembledContent = removeAllH1Tags(assembledContent, log);
+            assembledContent = removeAllH1Tags(assembledContent);
             
             // ═══════════════════════════════════════════════════════════════
             // STAGE 8: INTERNAL LINKS
@@ -2064,7 +2064,7 @@ OUTPUT: HTML only, starting with <h2>Conclusion</h2>.`;
         } catch (error: any) {
             log(`❌ Staged generation failed: ${error.message}`);
             log(`   → Falling back to single-shot...`);
-            return this.generateSingleShot(config, log);
+            return this.generateSingleShot(config);
         }
     }
     
@@ -2084,7 +2084,7 @@ OUTPUT: HTML only, starting with <h2>Conclusion</h2>.`;
 const youtubePromise = config.apiKeys?.serper ? (async () => {
     try {
         log(`   🎬 Searching YouTube for: "${config.topic.substring(0, 50)}..."`);
-        const foundVideo = await searchYouTubeVideo(config.topic, config.apiKeys.serper, log);
+        const foundVideo = await searchYouTubeVideo(config.topic, config.apiKeys.serper);
         
         if (foundVideo && foundVideo.videoId && foundVideo.videoId.length === 11) {
             youtubeVideo = foundVideo;
@@ -2115,7 +2115,7 @@ const youtubePromise = config.apiKeys?.serper ? (async () => {
                     }));
                     log(`   ✅ Using ${references.length} pre-validated references`);
                 } else {
-                    references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 }, log);
+                    references = await discoverReferences(config.topic, config.apiKeys.serper, { targetCount: 10, minAuthorityScore: 60 });
                     log(`   ✅ Discovered ${references.length} references`);
                 }
             } catch (e: any) {
@@ -2220,7 +2220,7 @@ OUTPUT FORMAT (VALID JSON ONLY):
                     TIMEOUTS.SINGLE_SHOT, log
                 );
                 
-                const parsed = healJSON(response, log);
+                const parsed = healJSON(response);
                 
                 if (parsed.success && parsed.data?.htmlContent) {
                     let rawContract = parsed.data as ContentContract;
@@ -2274,7 +2274,7 @@ if (youtubeVideo && youtubeVideo.videoId) {
                     
 // 5. Main Content with Visual Enhancements — STRIP ALL FAQ FORMATS
 let mainContent = rawContract.htmlContent;
-mainContent = removeAllH1Tags(mainContent, log);
+mainContent = removeAllH1Tags(mainContent);
 
 // ═══════════════════════════════════════════════════════════════
 // 🧹 CRITICAL: Strip ALL FAQ content from LLM output
@@ -2737,7 +2737,7 @@ if (config.internalLinks && config.internalLinks.length > 0) {
     }
     
     async generate(config: GenerateConfig, log: LogFunction): Promise<GenerationResult> {
-        return this.generateSingleShot(config, log);
+        return this.generateSingleShot(config);
     }
 }
 
