@@ -1158,12 +1158,13 @@ function extractTargetKeywords(title: string, url: string): string[] {
             // Try to find anchor text
                     // 🎯 SOTA: Use enterprise-grade contextual anchor text engine
         const targetKeywords = extractTargetKeywords(target.title || '', target.url);
-        const anchorCandidate = findContextualAnchorText(para.text, targetKeywords, target.title || '');        const anchorText = anchorCandidate ? anchorCandidate.phrase : null;
+                  const anchorCandidate = findContextualAnchorText(para.text, targetKeywords, target.title || '');
+    const anchorText = anchorCandidate ? anchorCandidate.phrase : null;
+            
+            
             if (anchorText && anchorText.length >= 4) {
                     anchorsMatched++;
                     const link = `<a href="${escapeHtml(target.url)}" title="${escapeHtml(target.title)}">${anchorText}</a>`;
-                    const escapedAnchor = anchorText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const anchorRegex = new RegExp(`\\b${escapedAnchor}\\b`, 'i');
                     
                     const newPara = para.full.replace(anchorRegex, link);
                     
